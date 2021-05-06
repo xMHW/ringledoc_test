@@ -27,10 +27,16 @@ io.on("connection", socket => {
         socket.on("send-changes", delta => {
             socket.broadcast.to(docId).emit("receive-changes", delta);
         });
+        
+        socket.on("send-cursor-changes", rangemap => {
+            socket.broadcast.to(docId).emit("receive-cursor-changes", rangemap);
+            console.log(rangemap["source"]);
+        });
 
         socket.on("save-document", async (data) => {
             await Document.findByIdAndUpdate(docId, { data })
         })
+
     })
 
 

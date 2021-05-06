@@ -9257,6 +9257,11 @@
   "resolved" "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.2.tgz"
   "version" "1.2.2"
 
+"quill-cursors@^3.0.1":
+  "integrity" "sha512-tb9o9NTV6hzLEjwD5E3hCNSXmH06+/xq2oq31hnUY6ChgII0Pe8kdEpsqoCBd4t35bHZjGF0EHmg/dPOllzLag=="
+  "resolved" "https://registry.npmjs.org/quill-cursors/-/quill-cursors-3.0.1.tgz"
+  "version" "3.0.1"
+
 "quill-delta@^3.6.2":
   "integrity" "sha512-wdIGBlcX13tCHOXGMVnnTVFtGRLoP0imqxM696fIPwIf5ODIYUHIvHbZcyvGlZFiFhK5XzDC2lpjbxRhnM05Tg=="
   "resolved" "https://registry.npmjs.org/quill-delta/-/quill-delta-3.6.3.tgz"
