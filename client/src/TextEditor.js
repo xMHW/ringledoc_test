@@ -8,6 +8,13 @@ import QuillCursors from 'quill-cursors';
 
 const SOCKET_URL = "http://localhost:5000"
 
+const CURSOR_LATENCY = 100;
+
+const COLORS = ['#FF385C', '#442dc9', '#28b496']
+
+//442dc9
+//ff3051
+
 const TOOLBAR_OPTIONS = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
     [{ font: [] }],
@@ -46,17 +53,19 @@ export default function TextEditor() {
         socket.once("load-document", doc => {
              quill.setContents(doc);
              quill.enable();
-             const curs = quill.getModule('cursors');
-             setCursors(curs);
         });
 
         socket.emit('get-document', docId);
     }, [socket, quill, docId])
 
-    useEffect(() => {
-        if(cursors == null) return;
-        if(cursors.CreateCursor(userId.toString(), "mike", 'blue'));
-    },[cursors])
+    // useEffect(() => {
+    //     if(cursors == null) return;
+    //     // if(cursors.CreateCursor(userId.toString(), "mike", 'blue'));
+    // },[cursors])
+
+    const updateCursor = (source, range) => {
+        setTimeout(() => cursors.moveCursor(source, range), CURSOR_LATENCY);
+    }
 
     useEffect(() => {
         if (socket == null || quill == null) return;
@@ -64,35 +73,53 @@ export default function TextEditor() {
             if (source !== 'user') return;
             socket.emit("send-changes", delta);
         };
+        const cursorHandler = (range, oldRange, source) => {
+            // if (source !== userId.toString()) return;
+            socket.emit("send-cursor-changes", {range: range, id: userId});
+        }
+
         quill.on('text-change', handler);
+        quill.on('selection-change', cursorHandler);
 
         return () => {
             quill.off('text-change', handler);
+            quill.off('selection-change', cursorHandler);
         }
     }, [socket, quill])
 
-    useEffect(() => {
-        if (socket == null || quill == null) return;
-        const handler = (range, oldRange, source) => {
-            if (source !== 'user') return;
-            socket.emit("send-cursor-changes", {range: range, source: source});
-        };
-        quill.on('selection-change', handler);
+    // useEffect(() => {
+    //     if (socket == null || quill == null) return;
+    //     const handler = (range, oldRange, source) => {
+    //         if (source !== 'user') return;
+    //         socket.emit("send-cursor-changes", {range: range, source: source});
+    //     };
+    //     quill.on('selection-change', handler);
 
-        return () => {
-            quill.off('selection-change', handler);
-        }
-    }, [socket, quill])
+    //     return () => {
+    //         quill.off('selection-change', handler);
+    //     }
+    // }, [socket, quill])
 
     useEffect(() => {
         if (socket == null || quill == null) return;
         const handler = (delta) => {
             quill.updateContents(delta);
         };
+        const cursorHandler = (cursormap) => {
+            Object.keys(cursormap).forEach((source) => {
+                cursors.createCursor(source, source, COLORS[parseInt(source)]);
+                updateCursor(source, cursormap[source]);
+                console.log('---')
+                console.log(source);
+                console.log(cursormap)
+            });
+        };
         socket.on('receive-changes', handler);
+        socket.on('receive-cursor-changes', cursorHandler);
 
         return () => {
             socket.off('receive-changes', handler);
+            socket.off('receive-cursor-changes', cursorHandler);
         }
     }, [socket, quill])
     
@@ -114,18 +141,22 @@ export default function TextEditor() {
         const editor = document.createElement("div");
         wrapper.append(editor)
         const q = new Quill(editor, { theme: "snow", modules: {
-            cursors: true,
-            toolbar: TOOLBAR_OPTIONS }, })
+            cursors: {
+                hideDelayMs: 5000,
+                hideSpeedMs: 0,
+                selectionChangeSource: null,
+                transformOnTextChange: true,
+            }, 
+            toolbar: TOOLBAR_OPTIONS }, });
+            const cq = q.getModule('cursors');
+            // cq.createCursor('1','mike','skyblue');
             q.disable();
             q.setText("Wait a moment pls...");
             setQuill(q);
+            setCursors(cq);
         }, [])
         return <div className="container" ref={wrapperRef}></div>
     }
-    // cursors: {
-    //     template: '<div class="custom-cursor">...</div>',
-    //     hideDelayMs: 5000,
-    //     hideSpeedMs: 0,
-    //     selectionChangeSource: null,
-    //     transformOnTextChange: true,
-    //   }, 
+    
+    // cursors: true,
+    // template: '<div class="custom-cursor">...</div>',

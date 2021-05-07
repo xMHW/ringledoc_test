@@ -21,6 +21,7 @@ io.on("connection", socket => {
 
     socket.on("get-document", async (docId) => {
         const document = await findOrCreateDocument(docId);
+        let cursors = {};
         socket.join(docId);
         socket.emit("load-document", document.data);
 
@@ -29,8 +30,10 @@ io.on("connection", socket => {
         });
         
         socket.on("send-cursor-changes", rangemap => {
-            socket.broadcast.to(docId).emit("receive-cursor-changes", rangemap);
-            console.log(rangemap["source"]);
+            console.log(rangemap);
+            cursors[rangemap.id] = rangemap.range;
+            socket.broadcast.to(docId).emit("receive-cursor-changes", cursors);
+
         });
 
         socket.on("save-document", async (data) => {
